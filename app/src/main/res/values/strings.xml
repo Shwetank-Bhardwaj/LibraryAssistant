@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">LibraryAssistant</string>
+    <string name="art_name">art_name</string>
+    <string name="artist">Artist</string>
+    <string name="birth_date">Birth Date</string>
+    <string name="artist_name">Artist Name</string>
+    <string name="artist_des">Artist description</string>
+    <string name="artist_image">Artist Image</string>
+    <string name="american_nationality">American</string>
+    <string name="nationality">Nationality</string>
+    <string name="title_activity_artist">ArtistActivity</string>
+</resources>
