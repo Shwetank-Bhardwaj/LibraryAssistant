@@ -9,6 +9,10 @@ import com.shwetank.libraryassistant.model.Art;
 import com.shwetank.libraryassistant.model.ArtBeaconList;
 import com.shwetank.libraryassistant.model.Artist;
 
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.ResultSet;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -67,6 +71,10 @@ public class NetworkManagerImpl implements NetworkManager {
         @Override
         protected Void doInBackground(Void... voids) {
             ArtBeaconList artBeaconList = new ArtBeaconList(beaconList);
+            /*
+            QueryExecution queryExecution = QueryExecutionFactory.sparqlService("endpoint", "query");
+            ResultSet resultSet = queryExecution.execSelect();
+            */
             mRetrofit.create(GetDataService.class).getBulkArt(artBeaconList).enqueue(new Callback<List<Art>>() {
                 @Override
                 public void onResponse(Call<List<Art>> call, Response<List<Art>> response) {

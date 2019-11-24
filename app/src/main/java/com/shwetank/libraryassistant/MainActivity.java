@@ -11,7 +11,6 @@ import android.widget.Toast;
 import com.shwetank.libraryassistant.beacon.Beacon;
 import com.shwetank.libraryassistant.beacon.BeaconActivity;
 import com.shwetank.libraryassistant.model.Art;
-import com.shwetank.libraryassistant.model.Artist;
 import com.shwetank.libraryassistant.network.NetworkManager;
 import com.shwetank.libraryassistant.network.NetworkManagerImpl;
 
