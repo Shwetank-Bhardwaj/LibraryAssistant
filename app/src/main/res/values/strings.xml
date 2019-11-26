@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LibraryAssistant</string>
+    <string name="app_name">Virtual Museum Assistant</string>
     <string name="art_name">art_name</string>
     <string name="artist">Artist</string>
     <string name="birth_date">Birth Date</string>
