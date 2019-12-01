@@ -97,6 +97,7 @@
             android:id="@+id/audio"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:layout_marginStart="16dp"
             android:background="@drawable/ic_volume_up_black_24dp"
             app:layout_constraintStart_toEndOf="@+id/textView2"
             app:layout_constraintTop_toTopOf="@+id/textView2" />
