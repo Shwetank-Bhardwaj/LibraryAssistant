@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.shwetank.libraryassistant.beacon.Beacon;
 import com.shwetank.libraryassistant.beacon.BeaconActivity;
+import com.shwetank.libraryassistant.beacon.BeaconUtility;
 import com.shwetank.libraryassistant.model.Art;
 import com.shwetank.libraryassistant.network.NetworkManager;
 import com.shwetank.libraryassistant.network.NetworkManagerImpl;
@@ -36,6 +37,11 @@ public class MainActivity extends BeaconActivity implements ArtData {
     };
 
     @Override
+    protected void beaconDetected() {
+        getUpdatedArtDataFromBeacons(getBeaconList());
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -46,6 +52,9 @@ public class MainActivity extends BeaconActivity implements ArtData {
 
     private void getUpdatedArtDataFromBeacons(List<Beacon> beaconList) {
         List<String> list = new ArrayList<>();
+        for (Beacon beacon : beaconList) {
+            list.add(BeaconUtility.getBeaconId(String.valueOf(beacon.getMinor())));
+        }
         mNetworkManager.getBulkArtData(list, this);
     }
 
@@ -67,18 +76,8 @@ public class MainActivity extends BeaconActivity implements ArtData {
         mMainAdapter = new MainAdapter(this, mArtList);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
         mRecyclerView.setAdapter(mMainAdapter);
-        createListData();
     }
 
-    private void createListData() {
-        Art art = new Art("https://ids.si.edu/ids/deliveryService?id=SAAM-1906.9.11_1", "Independence (Squire Jack Porter)", "Mayer", "Jack Porter, a veteran of the War of 1812 who made a handsome living from Pennsylvania's coal mines, is surrounded by handmade objects, including a corncob pipe, a roughly-hewn wooden bench, and his wife's knitting. As a self-sufficient landholder and businessman, \"Squire Jack\" embodied an independent and enduring spirit that, by the 1850s, had become an American ideal, celebrated by painters and writers alike. The squire takes his ease on the porch of a substantial home, dressed in a flowered vest, black cravat, and polished boots that signal the rewards of his hard work.<p>Exhibition Label, Smithsonian American Art Museum, 2006");
-        Art art1 = new Art("https://ids.si.edu/ids/deliveryService?id=SAAM-1906.9.11_1", "Independence (Squire Jack Porter)", "Mayer", "Jack Porter, a veteran of the War of 1812 who made a handsome living from Pennsylvania's coal mines, is surrounded by handmade objects, including a corncob pipe, a roughly-hewn wooden bench, and his wife's knitting. As a self-sufficient landholder and businessman, \"Squire Jack\" embodied an independent and enduring spirit that, by the 1850s, had become an American ideal, celebrated by painters and writers alike. The squire takes his ease on the porch of a substantial home, dressed in a flowered vest, black cravat, and polished boots that signal the rewards of his hard work.<p>Exhibition Label, Smithsonian American Art Museum, 2006");
-        Art art2 = new Art("https://ids.si.edu/ids/deliveryService?id=SAAM-1906.9.11_1", "Independence (Squire Jack Porter)", "Mayer", "Jack Porter, a veteran of the War of 1812 who made a handsome living from Pennsylvania's coal mines, is surrounded by handmade objects, including a corncob pipe, a roughly-hewn wooden bench, and his wife's knitting. As a self-sufficient landholder and businessman, \"Squire Jack\" embodied an independent and enduring spirit that, by the 1850s, had become an American ideal, celebrated by painters and writers alike. The squire takes his ease on the porch of a substantial home, dressed in a flowered vest, black cravat, and polished boots that signal the rewards of his hard work.<p>Exhibition Label, Smithsonian American Art Museum, 2006");
-        mArtList.add(art);
-        mArtList.add(art1);
-        mArtList.add(art2);
-        mMainAdapter.notifyDataSetChanged();
-    }
 
     private void findAllIds() {
         mRecyclerView = findViewById(R.id.recycler_view);
@@ -88,6 +87,7 @@ public class MainActivity extends BeaconActivity implements ArtData {
 
     @Override
     public void artData(List<Art> artList) {
+        mArtList.clear();
         mArtList.addAll(artList);
         mMainAdapter.notifyDataSetChanged();
     }

@@ -9,4 +9,7 @@
     <string name="american_nationality">American</string>
     <string name="nationality">Nationality</string>
     <string name="title_activity_artist">ArtistActivity</string>
+    <string name="title_activity_art">ArtActivity</string>
+    <string name="death_date"> Death Date</string>
+    <string name="Present">Present</string>
 </resources>

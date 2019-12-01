@@ -10,7 +10,6 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.shwetank.libraryassistant.ArtData;
 import com.shwetank.libraryassistant.ArtistData;
 import com.shwetank.libraryassistant.model.Art;
-import com.shwetank.libraryassistant.model.ArtBeaconList;
 import com.shwetank.libraryassistant.model.Artist;
 
 import java.util.ArrayList;
@@ -57,7 +56,13 @@ public class NetworkManagerImpl implements NetworkManager {
         artistDataAsyncTask.execute();
     }
 
-    class ArtDataAsyncTask extends AsyncTask<Void, Void, Void> {
+    @Override
+    public void getRecommendedArt(Art art, ArtData artData) {
+        RecommendedDataAsyncTask recommendedDataAsyncTask = new RecommendedDataAsyncTask(art, artData);
+        recommendedDataAsyncTask.execute();
+    }
+
+    class ArtDataAsyncTask extends AsyncTask<Void, Void, List> {
 
 
         private final List<String> beaconList;
@@ -69,28 +74,32 @@ public class NetworkManagerImpl implements NetworkManager {
         }
 
         @Override
-        protected Void doInBackground(Void... voids) {
-            beaconList.add("41");
+        protected List<Art> doInBackground(Void... voids) {
+            List<Art> artList = new ArrayList<>();
             for (String s : beaconList) {
                 String query = "PREFIX cidoccrm: <http://www.cidoc-crm.org/cidoc-crm/>\n" +
                         "PREFIX saam: <http://edan.si.edu/saam/id/ontologies/>\n" +
                         "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n" +
                         "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                         "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-                        "PREFIX ds2: <http://ec2-54-153-4-119.us-west-1.compute.amazonaws.com:3030/ds2/>\n" +
-                        "PREFIX ds3: <http://ec2-54-153-122-152.us-west-1.compute.amazonaws.com:3030/ds3/>\n" +
+                        "PREFIX ds2: <http://54.153.4.119:3030/ds2/>\n" +
+                        "PREFIX ds3: <http://54.153.122.152:3030/ds3/>\n" +
                         "SELECT ?artwork ?artworkurl ?artworkname ?artworkinfo ?artist ?artistfirstname ?artistlastname ?artisturl ?artistbio ?artistnationality ?artistbirthdatelabel ?artistdeathdatelabel ?artworktype ?artworkclassification ?artworkclassification2 ?currentkeeper ?artworkmedium\n" +
                         "WHERE {\n" +
-                        "  ?location ?label \"109123\" .\n" +
+                        "  ?location ?label \"" + s + "\".\n" +
                         "  ?artwork cidoccrm:P55_has_current_location ?location .\n" +
-                        "  SERVICE ds2:sparql {\n" +
+                        "  \n" +
+                        "  SERVICE ds2:sparql { \n" +
                         "    ?artwork cidoccrm:P138i_has_representation ?artworkurl .\n" +
+                        "  \t\n" +
                         "    ?artwork cidoccrm:P102_has_title ?artworktitle .\n" +
                         "  \t?artworktitle rdfs:label ?artworkname .\n" +
+                        "    \n" +
                         "    ?artwork saam:PE_has_note_gallerylabel ?artworkinfo .\n" +
                         "  \t?producedby cidoccrm:P108_has_produced ?artwork .\n" +
+                        "    \n" +
                         "    ?producedby cidoccrm:P14_carried_out_by ?artist .\n" +
-                        "    #Recommendation filering attributes\n" +
+                        "    \n" +
                         "  \t?artwork rdf:type ?artworktype .\n" +
                         "  \t?artwork saam:PE_object_mainclass ?artworkclassification .\n" +
                         "  \tOPTIONAL { ?artwork saam:PE_object_subsclass ?artworkclassification2 . }\n" +
@@ -98,57 +107,160 @@ public class NetworkManagerImpl implements NetworkManager {
                         "  \t?artwork saam:PE_medium_description ?artworkmedium .\n" +
                         "  }\n" +
                         "  SERVICE ds3:query {\n" +
-                        "  \t?artist saam:PE_has_note_luceartistbio ?artistbio .\n" +
+                        "  \t?artist saam:PE_has_note_artistbio ?artistbio .\n" +
+                        "    \n" +
                         "    ?artist cidoccrm:P107i_is_current_or_former_member_of ?artistnatiionalityobj .\n" +
                         "  \t?artistnatiionalityobj skos:prefLabel ?artistnationality .\n" +
+                        "  \n" +
                         "  \t?artist cidoccrm:P98i_was_born ?artistbirthdateobj .\n" +
                         "  \t?artistbirthdateobj cidoccrm:P4_has_time-span ?artistbirthdate .\n" +
                         "  \t?artistbirthdate cidoccrm:P82_at_some_time_within ?artistbirthdatelabel .\n" +
+                        " \n" +
                         "  \t?artist cidoccrm:P100i_died_in ?artistdeathdateobj .\n" +
                         "  \t?artistdeathdateobj cidoccrm:P4_has_time-span ?artistdeathdate .\n" +
                         "  \t?artistdeathdate cidoccrm:P82_at_some_time_within ?artistdeathdatelabel .\n" +
+                        "  \n" +
                         "  \t?artist cidoccrm:P1_is_identified_by ?displayname .\n" +
-                        "  \t?displayname saam:PE_firstname ?artistfirstname .\n" +
+                        "    \t?displayname saam:PE_firstname ?artistfirstname .\n" +
                         "  \t?displayname saam:PE_lastname ?artistlastname .\n" +
-                        "  \t?artist cidoccrm:P138i_has_representation ?artisturl .\n" +
+                        "  \n" +
+                        "    \tOPTIONAL { ?artist cidoccrm:P138i_has_representation ?artisturl . }\n" +
                         "  }\n" +
                         "  FILTER (contains(str(?displayname), \"displayname\"))\n" +
                         "  FILTER NOT EXISTS {\n" +
                         "  \tFILTER (contains(str(?artworkurl), \"jpg\"))\n" +
                         "  }\n" +
-                        "}";
+                        "}\n" +
+                        "LIMIT 1";
                 QueryExecution queryExecution = QueryExecutionFactory.sparqlService("http://ec2-54-193-127-210.us-west-1.compute.amazonaws.com:3030/ds1/query", query);
                 ResultSet resultSet = queryExecution.execSelect();
+                QuerySolution querySolution = resultSet.next();
+
+                Art art = new Art();
+                art.setArtistDeathDate(querySolution.get("artistdeathdatelabel").toString());
+                art.setArtistImageUrl(querySolution.get("artisturl").toString());
+                art.setArtWorkImageUrl(querySolution.get("artworkurl").toString());
+                art.setArtWorkMedium(querySolution.get("artworkmedium").toString());
+                art.setArtWorkDescription(querySolution.get("artworkinfo").toString());
+                art.setArtistBirthDate(querySolution.get("artistbirthdatelabel").toString());
+                art.setArtistName(querySolution.get("artistfirstname").toString().concat(" ").concat(querySolution.get("artistlastname").toString()));
+                art.setArtWorkType(querySolution.get("artworktype").toString());
+                art.setArtistBio(querySolution.get("artistbio").toString());
+                art.setArtWorkClassification(querySolution.get("artworkclassification").toString());
+                art.setCurrentKeeper(querySolution.get("currentkeeper").toString());
+                art.setArtWorkName(querySolution.get("artworkname").toString());
+                art.setArtistNationality(querySolution.get("artistnationality").toString());
+                artList.add(art);
             }
-
-            ArtBeaconList artBeaconList = new ArtBeaconList(beaconList);
-            mRetrofit.create(GetDataService.class).getBulkArt(artBeaconList).enqueue(new Callback<List<Art>>() {
-                @Override
-                public void onResponse(Call<List<Art>> call, Response<List<Art>> response) {
-                    sendData();
-                }
-
-                @Override
-                public void onFailure(Call<List<Art>> call, Throwable t) {
-                    sendData();
-                }
-            });
-            return null;
+            return artList;
         }
 
-        public void sendData() {
-            List<Art> list = new ArrayList<>();
-            Art art1 = new Art("https://ids.si.edu/ids/deliveryService?id=SAAM-1984.114.2_1", "Art Name", "Artist Name", "The painting is thought by many to be a portrait of Lisa Gherardini,[4] the wife of Francesco del Giocondo, and is in oil on a white Lombardy poplar panel. It had been believed to have been painted between 1503 and 1506; however, Leonardo may have continued working on it as late as 1517. Recent academic work suggests that it would not have been started before 1513.[5][6][7][8] It was acquired by King Francis I of France and is now the property of the French Republic, on permanent display at the Louvre Museum in Paris since 1797.[9]");
-            list.add(art1);
-            Art art2 = new Art("https://ids.si.edu/ids/deliveryService?id=SAAM-2013.74_2", "Art Name", "Artist Name", "The painting is thought by many to be a portrait of Lisa Gherardini,[4] the wife of Francesco del Giocondo, and is in oil on a white Lombardy poplar panel. It had been believed to have been painted between 1503 and 1506; however, Leonardo may have continued working on it as late as 1517. Recent academic work suggests that it would not have been started before 1513.[5][6][7][8] It was acquired by King Francis I of France and is now the property of the French Republic, on permanent display at the Louvre Museum in Paris since 1797.[9]");
-            list.add(art2);
-            Art art3 = new Art("https://ids.si.edu/ids/deliveryService?id=SAAM-1991.183_1", "Art Name", "Artist Name", "The painting is thought by many to be a portrait of Lisa Gherardini,[4] the wife of Francesco del Giocondo, and is in oil on a white Lombardy poplar panel. It had been believed to have been painted between 1503 and 1506; however, Leonardo may have continued working on it as late as 1517. Recent academic work suggests that it would not have been started before 1513.[5][6][7][8] It was acquired by King Francis I of France and is now the property of the French Republic, on permanent display at the Louvre Museum in Paris since 1797.[9]");
-            list.add(art3);
-            Art art4 = new Art("https://ids.si.edu/ids/deliveryService?id=SAAM-1991.183_1", "Art Name", "Artist Name", "The painting is thought by many to be a portrait of Lisa Gherardini,[4] the wife of Francesco del Giocondo, and is in oil on a white Lombardy poplar panel. It had been believed to have been painted between 1503 and 1506; however, Leonardo may have continued working on it as late as 1517. Recent academic work suggests that it would not have been started before 1513.[5][6][7][8] It was acquired by King Francis I of France and is now the property of the French Republic, on permanent display at the Louvre Museum in Paris since 1797.[9]");
-            list.add(art4);
+        @Override
+        protected void onPostExecute(List list) {
+            super.onPostExecute(list);
             artData.artData(list);
         }
     }
+
+    class RecommendedDataAsyncTask extends AsyncTask<Void, Void, List> {
+        private Art art;
+        private final ArtData artData;
+
+        public RecommendedDataAsyncTask(Art art, ArtData artData) {
+            this.art = art;
+            this.artData = artData;
+        }
+
+        @Override
+        protected List<Art> doInBackground(Void... voids) {
+            List<Art> artList = new ArrayList<>();
+            String query = "PREFIX cidoccrm: <http://www.cidoc-crm.org/cidoc-crm/>\n" +
+                    "PREFIX saam: <http://edan.si.edu/saam/id/ontologies/>\n" +
+                    "PREFIX thesauri: <http://edan.si.edu/saam/id/thesauri/classification/>\n" +
+                    "PREFIX museum: <http://edan.si.edu/saam/id/>\n" +
+                    "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n" +
+                    "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
+                    "PREFIX ds2: <http://54.153.4.119:3030/ds2/>\n" +
+                    "PREFIX ds3: <http://54.153.122.152:3030/ds3/>\n" +
+                    "\n" +
+                    "SELECT ?artwork \n" +
+                    "(SAMPLE(?artworkurl) AS ?recommendedartworkurl) \n" +
+                    "(SAMPLE(?artworkname) AS ?recommendedartworkname) \n" +
+                    "(SAMPLE(?artworkinfo) AS ?recommendedartworkinfo)\n" +
+                    "(SAMPLE(?artist) AS ?recommendedartist) \n" +
+                    "(SAMPLE(?artistfirstname) AS ?recommendedartistfirstname) \n" +
+                    "(SAMPLE(?artistlastname) AS ?recommendedartistlastname) \n" +
+                    "(SAMPLE(?artisturl) AS ?recommendedartisturl) \n" +
+                    "(SAMPLE(?artistbio) AS ?recommendedartistbio) \n" +
+                    "(SAMPLE(?artistnationality) AS ?recommendedartistnationality) \n" +
+                    "(SAMPLE(?artistbirthdatelabel) AS ?recommendedartistbirthdatelabel) \n" +
+                    "(SAMPLE(?artistdeathdatelabel) AS ?recommendedartistdeathdatelabel)\n" +
+                    "WHERE {\n" +
+                    "  SERVICE ds2:sparql {\n" +
+                    "  \t?artwork rdf:type <" + art.getArtworkType() + ">.\n" +
+                    "  \t?artwork saam:PE_object_mainclass <"+art.getArtworkClassification()+"> .\n" +
+                    "  \t?artwork cidoccrm:P50_has_current_keeper <"+art.getCurrentKeeper()+"> .\n" +
+                    "  \t?artwork saam:PE_medium_description \""+art.getArtworkMedium()+"\" .\n" +
+                    "  \n" +
+                    "  \n" +
+                    "  \t?artwork cidoccrm:P138i_has_representation ?artworkurl .\n" +
+                    "  \n" +
+                    "  \t?artwork cidoccrm:P102_has_title ?artworktitle .\n" +
+                    "  \t?artworktitle rdfs:label ?artworkname .\n" +
+                    "  \n" +
+                    "  \t?artwork saam:PE_has_note_gallerylabel ?artworkinfo .\n" +
+                    "  \t?producedby cidoccrm:P108_has_produced ?artwork .\n" +
+                    "  \n" +
+                    "  \t?producedby cidoccrm:P14_carried_out_by ?artist .\n" +
+                    "  }\n" +
+                    "  SERVICE ds3:query {\n" +
+                    "    \t?artist saam:PE_has_note_artistbio ?artistbio .\n" +
+                    "  \n" +
+                    "  \t?artist cidoccrm:P107i_is_current_or_former_member_of ?artistnatiionalityobj .\n" +
+                    "  \t?artistnatiionalityobj skos:prefLabel ?artistnationality .\n" +
+                    "  \n" +
+                    "  \t?artist cidoccrm:P98i_was_born ?artistbirthdateobj .\n" +
+                    "  \t?artistbirthdateobj cidoccrm:P4_has_time-span ?artistbirthdate .\n" +
+                    "  \t?artistbirthdate cidoccrm:P82_at_some_time_within ?artistbirthdatelabel .\n" +
+                    "  \n" +
+                    "  \t?artist cidoccrm:P100i_died_in ?artistdeathdateobj .\n" +
+                    "  \t?artistdeathdateobj cidoccrm:P4_has_time-span ?artistdeathdate .\n" +
+                    "  \t?artistdeathdate cidoccrm:P82_at_some_time_within ?artistdeathdatelabel .\n" +
+                    "  \n" +
+                    "  \t?artist cidoccrm:P1_is_identified_by ?displayname .\n" +
+                    "  \t?displayname saam:PE_firstname ?artistfirstname .\n" +
+                    "  \t?displayname saam:PE_lastname ?artistlastname .\n" +
+                    "  \n" +
+                    "  \tOPTIONAL { ?artist cidoccrm:P138i_has_representation ?artisturl . }\n" +
+                    "  }\n" +
+                    "  FILTER (contains(str(?displayname), \"displayname\"))\n" +
+                    "  FILTER NOT EXISTS {\n" +
+                    "  \tFILTER (contains(str(?artworkurl), \"jpg\"))\n" +
+                    "  }\n" +
+                    "}\n" +
+                    "GROUP BY ?artwork\n" +
+                    "LIMIT 5";
+            QueryExecution queryExecution = QueryExecutionFactory.sparqlService("http://ec2-54-193-127-210.us-west-1.compute.amazonaws.com:3030/ds1/query", query);
+            ResultSet resultSet = queryExecution.execSelect();
+            while (resultSet.hasNext()) {
+                QuerySolution querySolution = resultSet.next();
+                Art art = new Art();
+                art.setArtWorkImageUrl(querySolution.get("recommendedartworkurl").toString());
+                art.setArtistName(querySolution.get("recommendedartistfirstname").toString().concat(" ").concat(querySolution.get("recommendedartistlastname").toString()));
+                art.setArtWorkName(querySolution.get("recommendedartworkname").toString());
+                artList.add(art);
+            }
+            return artList;
+        }
+
+        @Override
+        protected void onPostExecute(List list) {
+            super.onPostExecute(list);
+            artData.artData(list);
+        }
+    }
+
 
     class ArtistDataAsyncTask extends AsyncTask<Void, Void, Void> {
         private String artistName;

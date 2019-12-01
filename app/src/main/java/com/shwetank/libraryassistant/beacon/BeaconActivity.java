@@ -7,6 +7,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
@@ -30,6 +31,7 @@ public abstract class BeaconActivity extends AppCompatActivity {
     private static final double CONF_2 = 6.9476;
     private static final double CONF_3 = 0.54992;
     private UUID defaultUUID = UUID.fromString("0746dfe1-319c-48b7-9cc8-561b79c3f223");
+    private boolean isCalled = false;
 
     private ScanCallback mScanCallback = new ScanCallback() {
         @Override
@@ -55,8 +57,17 @@ public abstract class BeaconActivity extends AppCompatActivity {
                         beacon.setProximityRange(Proximity.AWAY);
                     }
                     String uniqueKey = beacon.getUuid() + ":" + beacon.getMajor() + ":" + beacon.getMinor();
-                    Log.d("Beacon", String.valueOf(distance));
+                    Log.d("Beacon", uniqueKey.concat("  ").concat(String.valueOf(distance)));
                     mBeaconMap.put(uniqueKey, beacon);
+                    if(!isCalled){
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                beaconDetected();
+                            }
+                        }, 3000);
+                        isCalled = true;
+                    }
                 }
             }
         }
@@ -70,9 +81,10 @@ public abstract class BeaconActivity extends AppCompatActivity {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-
         }
     };
+
+    protected abstract void beaconDetected();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

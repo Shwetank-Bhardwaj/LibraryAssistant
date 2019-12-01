@@ -1,7 +1,6 @@
 package com.shwetank.libraryassistant;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,34 +13,35 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.shwetank.libraryassistant.glide.GlideApp;
 import com.shwetank.libraryassistant.model.Art;
 
-import java.util.ArrayList;
+import java.util.List;
 
-public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ArtViewHolder> {
+import static android.media.CamcorderProfile.get;
 
-    private final Context mContext;
-    private ArrayList<Art> mArtList;
+class RecommendationAdapter extends RecyclerView.Adapter<RecommendationAdapter.ArtViewHolder> {
+    private Context context;
+    private List<Art> artList;
 
-    public MainAdapter(Context context, ArrayList<Art> artList) {
-        this.mContext = context;
-        this.mArtList = artList;
+    public RecommendationAdapter(Context context, List<Art> artList) {
+        this.context = context;
+        this.artList = artList;
     }
 
     @NonNull
     @Override
-    public ArtViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.art_layout, parent, false);
-        return new ArtViewHolder(view);
+    public RecommendationAdapter.ArtViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.art_layout, parent, false);
+        return new RecommendationAdapter.ArtViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ArtViewHolder holder, int position) {
-        Art art = mArtList.get(position);
-        holder.setDetails(mContext, art);
+    public void onBindViewHolder(@NonNull RecommendationAdapter.ArtViewHolder holder, int position) {
+        Art art = artList.get(position);
+        holder.setDetails(context, art);
     }
 
     @Override
     public int getItemCount() {
-        return mArtList.size();
+        return artList.size();
     }
 
     class ArtViewHolder extends RecyclerView.ViewHolder {
@@ -55,12 +55,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ArtViewHolder>
             artName = itemView.findViewById(R.id.art_name);
             artistName = itemView.findViewById(R.id.artist_name);
             artImageView = itemView.findViewById(R.id.art_image);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    openArtActivity(mArtList.get(getAdapterPosition()));
-                }
-            });
         }
 
         public void setDetails(final Context context, Art art) {
@@ -71,13 +65,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ArtViewHolder>
                     .centerCrop()
                     .into(artImageView);
         }
-
-        private void openArtActivity(Art art) {
-            Intent i = new Intent(mContext.getApplicationContext(), ArtActivity.class);
-            i.putExtra("data", art);
-            mContext.startActivity(i);
-        }
-
     }
 }
 
