@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
@@ -108,6 +109,13 @@ public abstract class BeaconActivity extends AppCompatActivity {
         } else if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
         }
+        LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if(manager == null){
+            Toast.makeText(getApplicationContext(), "Location Manager not available", Toast.LENGTH_LONG).show();
+        } else if(!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+        }
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_FINE_LOCATION);
         }
@@ -118,7 +126,7 @@ public abstract class BeaconActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PERMISSION_FINE_LOCATION && resultCode == RESULT_OK) {
-            scanBleDevice(true );
+            scanBleDevice(true);
         }
     }
 
@@ -135,6 +143,9 @@ public abstract class BeaconActivity extends AppCompatActivity {
 
     protected void scanBleDevice(boolean enable) {
         BluetoothLeScanner bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        if (bluetoothLeScanner == null) {
+            return;
+        }
         if (enable) {
             mScanning = true;
             bluetoothLeScanner.startScan(mScanCallback);
