@@ -1,18 +1,25 @@
 package com.shwetank.libraryassistant.beacon;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +31,7 @@ import java.util.UUID;
 
 public abstract class BeaconActivity extends AppCompatActivity {
 
+    private static final int PERMISSION_FINE_LOCATION = 56;
     private BluetoothAdapter mBluetoothAdapter;
     protected boolean mScanning;
     private Map<String, Beacon> mBeaconMap = new LinkedHashMap<>();
@@ -38,7 +46,7 @@ public abstract class BeaconActivity extends AppCompatActivity {
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
 
-            if(result.getScanRecord() == null){
+            if (result.getScanRecord() == null) {
                 return;
             }
 
@@ -59,7 +67,7 @@ public abstract class BeaconActivity extends AppCompatActivity {
                     String uniqueKey = beacon.getUuid() + ":" + beacon.getMajor() + ":" + beacon.getMinor();
                     Log.d("Beacon", uniqueKey.concat("  ").concat(String.valueOf(distance)));
                     mBeaconMap.put(uniqueKey, beacon);
-                    if(!isCalled){
+                    if (!isCalled) {
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
@@ -97,6 +105,20 @@ public abstract class BeaconActivity extends AppCompatActivity {
         mBluetoothAdapter = bluetoothManager.getAdapter();
         if (mBluetoothAdapter == null) {
             Toast.makeText(getApplicationContext(), "Bluetooth Adapter not available", Toast.LENGTH_LONG).show();
+        } else if (!mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.enable();
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_FINE_LOCATION);
+        }
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PERMISSION_FINE_LOCATION && resultCode == RESULT_OK) {
+            scanBleDevice(true );
         }
     }
 
